@@ -36,8 +36,8 @@ Suppose you have placed a Lua file named **PLAYER.lua** into the **SCRIPT_NAME/n
 ```lua
 require ("natives/PLAYER")
 
-local player_id = PLAYER_ID()
-local ped_id = GET_PLAYER_PED_SCRIPT_INDEX(player_id)
+local player_id = PLAYER.PLAYER_ID()
+local ped_id = PLAYER.GET_PLAYER_PED_SCRIPT_INDEX(player_id)
 ```
 
 ## Important Notes
