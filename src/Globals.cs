@@ -10,7 +10,7 @@
         /// This mapping is used to determine if a function requires the fix vectors operation
         /// in the Lua API invoker. Both the function name and ID are used for a precise match.
         /// </summary>
-        public static readonly Dictionary<string, int> FixVectorsFunctions = new Dictionary<string, int>
+        public static readonly Dictionary<string, int> FixVectorsFunctions = new()
         {
             { "GET_ENTITY_MATRIX", 761 },
             { "GET_CLOSEST_FIRE_POS", 985 },
@@ -51,6 +51,19 @@
             { "GET_VEHICLE_SIZE", 6283 },
             { "TEST_PROBE_AGAINST_WATER", 6432 },
             { "GET_PED_LAST_WEAPON_IMPACT_COORD", 6492 }
+        };
+
+        /// <summary>
+        /// A set of Lua keywords that should be avoided in parameter names to prevent syntax errors.
+        /// This set includes all reserved words in Lua that have special meaning in the language's syntax.
+        /// These keywords are checked against parameter names to ensure compatibility with Lua scripts.
+        /// </summary>
+        public static readonly HashSet<string> LuaKeywords = new()
+        {
+            "and", "break", "do", "else", "elseif",
+            "end", "false", "for", "function", "if",
+            "in", "local", "nil", "not", "or",
+            "repeat", "return", "then", "true", "until", "while"
         };
     }
 

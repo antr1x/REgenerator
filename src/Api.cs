@@ -77,39 +77,50 @@ namespace REgenerator
         }
 
         /// <summary>
-        /// Converts a native function into its Lua equivalent.
+        /// Generates Lua function code for a given native function.
+        /// This function takes a native function's information and converts it into a Lua function declaration.
+        /// It handles parameter sanitization, type formatting, and special function marking.
         /// </summary>
-        /// <param name="namespaceName">The namespace of the function.</param>
-        /// <param name="function">The function to convert.</param>
-        /// <returns>String containing the Lua function.</returns>
+        /// <param name="namespaceName">The namespace under which the function will be generated.</param>
+        /// <param name="function">Object containing information about the native function.</param>
+        /// <returns>A string representation of the Lua function.</returns>
         private static string GenerateLuaFunction(string namespaceName, Function function)
         {
             var luaFunction = new StringBuilder();
+
+            // Determines if the function requires special handling (e.g., vector fixes).
             var isFunctionSpecial = Globals.FixVectorsFunctions.TryGetValue(function.Name, out int expectedId) && expectedId.ToString() == function.Id;
 
-            // Include C++ signature and comments if enabled in settings
+            // Adds the original C++ function signature as a comment for reference.
             if (Settings.GenerateCppSignature)
             {
                 luaFunction.AppendLine($"-- {GetCppSignature(function)}");
             }
+
+            // Adds any additional comments provided for the function.
             if (Settings.GenerateComments && !string.IsNullOrEmpty(function.Comment))
             {
                 luaFunction.AppendLine($"--[[\n{function.Comment}\n--]]");
             }
 
-            // Construct the Lua function
-            luaFunction.AppendLine($"function {namespaceName}.{function.Name}({string.Join(", ", function.Params.Select(p => p.Name))})");
-            luaFunction.AppendLine($"  {(function.ReturnType == "void" ? "" : "return ")}native.invoke(");
+            // Constructs the Lua function declaration with sanitized parameter names to avoid conflicts with Lua keywords.
+            var paramList = string.Join(", ", function.Params.Select(p => SanitizeParamName(p.Name)));
+            luaFunction.AppendLine($"function {namespaceName}.{function.Name}({paramList})");
+
+            // Prepares the function's return statement based on its return type.
+            var returnType = function.ReturnType == "void" ? "" : "return ";
+            luaFunction.AppendLine($"  {returnType}native.invoke(");
             luaFunction.AppendLine($"    {GetFormattedType(function.ReturnType)}, {function.Id}, {isFunctionSpecial.ToString().ToLowerInvariant()}" + (function.Params.Any() ? "," : ""));
 
-            // Add function parameters
+            // Adds each parameter to the function call, formatting and sanitizing as necessary.
             foreach (var param in function.Params)
             {
                 var formattedType = GetFormattedType(param.Type.Contains("const char*") ? "string" : param.Type);
-                luaFunction.AppendLine($"    {(param.Type.Contains("*") ? "ref" : "arg")}({formattedType}, {param.Name}),");
+                var paramName = SanitizeParamName(param.Name);
+                luaFunction.AppendLine($"    {(param.Type.Contains("*") ? "ref" : "arg")}({formattedType}, {paramName}),");
             }
 
-            // Close the function body
+            // Closes the function call and declaration.
             if (function.Params.Any())
                 luaFunction.Remove(luaFunction.Length - 3, 1);
             luaFunction.AppendLine("  )");
@@ -118,17 +129,36 @@ namespace REgenerator
             return luaFunction.ToString();
         }
 
-        // Gets the C++ signature of the function as a comment string.
+        /// <summary>
+        /// Generates the C++ signature of a function and formats it as a comment.
+        /// This function converts the return type, function name, and parameters of a native function
+        /// into a C++ function declaration, providing clarity on the original native function signature.
+        /// Includes the native hash for easy reference.
+        /// </summary>
         private static string GetCppSignature(Function function)
         {
             return $"{function.ReturnType} {function.Name}({string.Join(", ", function.Params.Select(p => $"{p.Type} {p.Name}"))}) // {function.Hash}";
         }
 
-        // Formats the type string for use in Lua function parameters or return type.
+        /// <summary>
+        /// Formats a C++ type into a Lua-compatible type string.
+        /// This function takes a C++ type and converts it to the corresponding type used in Lua API.
+        /// Removes pointer asterisks and adjusts the case to match Lua conventions.
+        /// </summary>
         private static string GetFormattedType(string type)
         {
             type = type.Replace("*", "");
             return "Type." + char.ToUpper(type[0]) + type.Substring(1).ToLower();
+        }
+
+        /// <summary>
+        /// Sanitizes parameter names to avoid conflicts with Lua reserved keywords.
+        /// If a parameter name matches a Lua keyword, it appends an underscore to make it valid.
+        /// Ensures that generated Lua functions do not contain syntax errors due to keyword misuse.
+        /// </summary>
+        private static string SanitizeParamName(string paramName)
+        {
+            return Globals.LuaKeywords.Contains(paramName) ? $"{paramName}_" : paramName;
         }
     }
 }
