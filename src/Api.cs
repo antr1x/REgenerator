@@ -117,7 +117,8 @@ namespace REgenerator
             {
                 var formattedType = GetFormattedType(param.Type.Contains("const char*") ? "string" : param.Type);
                 var paramName = SanitizeParamName(param.Name);
-                luaFunction.AppendLine($"    {(param.Type.Contains("*") ? "ref" : "arg")}({formattedType}, {paramName}),");
+
+                luaFunction.AppendLine($"    {(formattedType.Contains("*") ? "ref" : "arg")}({formattedType}, {paramName}),");
             }
 
             // Closes the function call and declaration.
