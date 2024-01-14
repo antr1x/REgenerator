@@ -110,7 +110,7 @@ namespace REgenerator
             // Prepares the function's return statement based on its return type.
             var returnType = function.ReturnType == "void" ? "" : "return ";
             luaFunction.AppendLine($"  {returnType}native.invoke(");
-            luaFunction.AppendLine($"    {GetFormattedType(function.ReturnType)}, {function.Id}, {isFunctionSpecial.ToString().ToLowerInvariant()}" + (function.Params.Any() ? "," : ""));
+            luaFunction.AppendLine($"    {GetFormattedType(function.ReturnType.Contains("const char*") ? "string" : function.ReturnType)}, {function.Id}, {isFunctionSpecial.ToString().ToLowerInvariant()}" + (function.Params.Any() ? "," : ""));
 
             // Adds each parameter to the function call, formatting and sanitizing as necessary.
             foreach (var param in function.Params)
