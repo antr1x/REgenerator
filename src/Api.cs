@@ -115,10 +115,11 @@ namespace REgenerator
             // Adds each parameter to the function call, formatting and sanitizing as necessary.
             foreach (var param in function.Params)
             {
-                var formattedType = GetFormattedType(param.Type.Contains("const char*") ? "string" : param.Type);
+                var stringifiedType = param.Type.Contains("const char*") ? "string" : param.Type;
+                var formattedType = GetFormattedType(stringifiedType);
                 var paramName = SanitizeParamName(param.Name);
 
-                luaFunction.AppendLine($"    {(formattedType.Contains("*") ? "ref" : "arg")}({formattedType}, {paramName}),");
+                luaFunction.AppendLine($"    {(stringifiedType.Contains("*") ? "ref" : "arg")}({formattedType}, {paramName}),");
             }
 
             // Closes the function call and declaration.
