@@ -124,7 +124,10 @@ namespace REgenerator
 
             // Closes the function call and declaration.
             if (function.Params.Any())
+            {
                 luaFunction.Remove(luaFunction.Length - 3, 1);
+            }
+
             luaFunction.AppendLine("  )");
             luaFunction.AppendLine("end");
 
